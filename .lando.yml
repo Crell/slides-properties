@@ -1,0 +1,4 @@
+name: slides-properties
+recipe: lamp
+config:
+  webroot: .
