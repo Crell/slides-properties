@@ -4,7 +4,7 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-	<title>Hooking into PHP</title>
+	<title>A Field Guide to PHProperties</title>
 
   <link rel="stylesheet" href="dist/reset.css">
   <link rel="stylesheet" href="dist/reveal.css">
@@ -23,12 +23,12 @@
 <body class="skin-blue">
 <div class="reveal">
   <footer>
-    <img src="assets/lz-logo-black.svg" alt="LegalZoom" />
+    <img src="assets/lz-logo-black.svg" alt="" />
     <span class="name">@Crell@phpc.social</span>
   </footer>
 	<div class="slides">
     <section class="title">
-      <h1>Hooking into PHP</h1>
+      <h1>A Field Guide to PHProperties</h1>
     </section>
 
     <section id="presenter">
@@ -50,10 +50,149 @@
     </section>
 
     <section>
+      <section>
+        <h2>New PHP version! (8.4)</h2>
+      </section>
+      <section>
+        <h3>New Toys!</h3>
+        <ul>
+          <li class="fragment">Asymmetric visibility</li>
+          <li class="fragment">Interface properties</li>
+          <li class="fragment">Property hooks (accessors)</li>
+          <li class="fragment">And other stuff we're not going to talk about</li>
+        </ul>
+        <aside class="notes">
+          <ul>
+            <li>Go see the change log and docs</li>
+            <li>Only going to skim over the syntax, go read the docs</li>
+          </ul>
+        </aside>
+      </section>
+      <section data-auto-animate data-auto-animate-id="aviz">
+        <h3>Asymmetric visibility</h3>
+        <pre data-id="example-code"><code class="php font--16" data-trim data-noescape data-line-numbers>
+          class Person {
+              public private(set) string $fullName;
+
+              public function __construct(
+                public private(set) string $firstName,
+                public private(set) string $lastName,
+                public protected(set) int $age,
+              ) {
+                  $this->fullName = sprintf('%s %s', $this->firstName, $this->lastName);
+              }
+          }
+        </code></pre>
+        <p class="fragment oversize">More flexible than <code>readonly</code></p>
+        <aside class="notes">
+          <ul>
+            <li>Vary the read/write side independently</li>
+          </ul>
+        </aside>
+      </section>
+      <section data-auto-animate data-auto-animate-id="aviz">
+        <h3>Asymmetric visibility</h3>
+        <pre data-id="example-code"><code class="php font--16" data-trim data-noescape data-line-numbers>
+          class Person {
+              private(set) string $fullName;
+
+              public function __construct(
+                private(set) string $firstName,
+                private(set) string $lastName,
+                protected(set) int $age,
+              ) {
+                  $this->fullName = sprintf('%s %s', $this->firstName, $this->lastName);
+              }
+          }
+        </code></pre>
+        <p class="oversize">Optionally omit <code>public</code></p>
+      </section>
+      <section data-auto-animate data-auto-animate-id="interface-props">
+        <h3>Interface properties</h3>
+        <pre data-id="example-code"><code class="php font--16" data-trim data-noescape data-line-numbers>
+          interface Named {
+              public string $firstName { get; }
+              public string $lastName { get; }
+
+              public string $nickname { get; set; }
+
+              public function fullName(): string;
+          }
+        </code></pre>
+        <p class="fragment oversize">Requires there be public read-or-write properties.</p>
+        <aside class="notes">
+          <ul>
+            <li>Interfaces can now require properties. Read or write or both.</li>
+            <li>Can satisfy the interface however you want.</li>
+          </ul>
+        </aside>
+      </section>
+      <section data-auto-animate data-auto-animate-id="interface-props">
+        <h3>Interface properties</h3>
+        <pre data-id="example-code"><code class="php font--16" data-trim data-noescape data-line-numbers>
+          interface Named {
+              public string $firstName { get; }
+              public string $lastName { get; }
+
+              public string $nickname { get; set; }
+
+              public function fullName(): string;
+          }
+
+          class Person implements Named {
+              public private(set) string $firstName;
+              public $lastName;
+              public string $nickname;
+
+              public function fullName(): string {
+                  sprintf('%s %s', $this->firstName, $this->lastName);
+              }
+          }
+        </code></pre>
+        <aside class="notes">
+          <ul>
+            <li>$firstName is public read, all we need.</li>
+            <li>$lastName is public read/write, which is also OK</li>
+            <li>$nickname is a basic property, so works read or write.</li>
+          </ul>
+        </aside>
+      </section>
 
     </section>
 
     <div style="display:none">
+      * Intro
+        * PHP has new features: hooks, interface props, aviz
+          * Very brief example of each
+        * Easy approach: don't use hooks, write less code, it's an escape hatch
+        * This is OK!  If you stop here, you are not doing it wrong.
+        * ... But we can go further.
+      * What is a property?
+      * What is an object? (Philosoraptor)
+      * No one-true OOP
+        * Product types: internals exposed
+        * Compound types: internals hidden (eg, DateTime)
+        * Logical representation (classic OOP academia)
+        * Closures with funny syntax (services, internals hidden)
+      * Historically: All properties private always. Couldn't do better.
+      * "Language teaches you to not want what it doesn't offer." (find source)
+      * Property vs Field
+      * Wikipedia
+        * https://en.wikipedia.org/wiki/Property_(programming)
+        * https://en.wikipedia.org/wiki/Field_(computer_science)
+        * C#
+        * Kotlin
+        * Swift
+        * Others...
+      * What is a property?  Depends on the type of object
+        * "Make one thing do many things" (find source)
+        * My def: "A visible aspect of a value."
+        * Method: "An action taken on a value."
+        * Must manipulating an aspect be a method?  Depends who you ask...
+      * Things you CAN do with hooks
+        * BC shim
+        * Cached value
+      *
 
 
 
