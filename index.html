@@ -81,6 +81,12 @@
               ) {
                   $this->fullName = sprintf('%s %s', $this->firstName, $this->lastName);
               }
+
+              public function update(string $first, string $last): void {
+                  $this->first = $first;
+                  $this->last = $last;
+                  $this->fullName = sprintf('%s %s', $this->firstName, $this->lastName);
+              }
           }
         </code></pre>
         <p class="fragment oversize">More flexible than <code>readonly</code></p>
@@ -92,7 +98,7 @@
       </section>
       <section data-auto-animate data-auto-animate-id="aviz">
         <h3>Asymmetric visibility</h3>
-        <pre data-id="example-code"><code class="php font--16" data-trim data-noescape data-line-numbers>
+        <pre data-id="code"><code class="php font--16" data-trim data-noescape data-line-numbers>
           class Person {
               private(set) string $fullName;
 
@@ -103,13 +109,19 @@
               ) {
                   $this->fullName = sprintf('%s %s', $this->firstName, $this->lastName);
               }
+
+              public function update(string $first, string $last): void {
+                  $this->first = $first;
+                  $this->last = $last;
+                  $this->fullName = sprintf('%s %s', $this->firstName, $this->lastName);
+              }
           }
         </code></pre>
         <p class="oversize">Optionally omit <code>public</code></p>
       </section>
       <section data-auto-animate data-auto-animate-id="interface-props">
         <h3>Interface properties</h3>
-        <pre data-id="example-code"><code class="php font--16" data-trim data-noescape data-line-numbers>
+        <pre data-id="code"><code class="php font--16" data-trim data-noescape data-line-numbers>
           interface Named {
               public string $firstName { get; }
               public string $lastName { get; }
@@ -129,7 +141,7 @@
       </section>
       <section data-auto-animate data-auto-animate-id="interface-props">
         <h3>Interface properties</h3>
-        <pre data-id="example-code"><code class="php font--16" data-trim data-noescape data-line-numbers>
+        <pre data-id="code"><code class="php font--16" data-trim data-noescape data-line-numbers>
           interface Named {
               public string $firstName { get; }
               public string $lastName { get; }
@@ -141,7 +153,7 @@
 
           class Person implements Named {
               public private(set) string $firstName;
-              public $lastName;
+              public string $lastName;
               public string $nickname;
 
               public function fullName(): string {
@@ -157,7 +169,325 @@
           </ul>
         </aside>
       </section>
+      <section data-auto-animate data-auto-animate-id="hooks">
+        <h3 data-id="anatomy-title">Property hooks (aka Accessors)</h3>
+        <pre data-id="anatomy-code"><code class="php font--16" data-trim data-noescape data-line-numbers>
+          class Person {
+              public string $name = '' {
+                  get {
+                      return $this->name;
+                  }
+                  set(string $value) {
+                      $this->name = $value;
+                  }
+              }
+          }
 
+          // This hasn't changed!
+          $p = new Person();
+          $p->name = "Larry";
+          print $p->name . PHP_EOL;
+        </code></pre>
+        <aside class="notes">
+          <ul>
+            <li>Hooks intercept the read/write process</li>
+            <li>Override the normal behavior with arbitrary code</li>
+            <li>Same net effect as a method, but accessed through property syntax</li>
+          </ul>
+        </aside>
+      </section>
+      <section data-auto-animate data-auto-animate-id="hooks">
+        <h3 data-id="anatomy-title"><code>set</code> args are optional</h3>
+        <pre data-id="anatomy-code"><code class="php font--16" data-trim data-noescape data-line-numbers>
+          class Person {
+              public string $name = '' {
+                  get {
+                      return $this->name;
+                  }
+                  set {
+                      $this->name = $value;
+                  }
+              }
+          }
+
+          // This hasn't changed!
+          $p = new Person();
+          $p->name = "Larry";
+          print $p->name . PHP_EOL;
+        </code></pre>
+        <aside class="notes">
+          <ul>
+            <li>Don't need to specify the type/name of the set arg. Defaults to $value and prop type</li>
+            <li>Why $value?  It's what other langs use for this.</li>
+          </ul>
+        </aside>
+      </section>
+      <section data-auto-animate data-auto-animate-id="hooks">
+        <h3 data-id="anatomy-title">Short-hand <code>get</code></h3>
+        <pre data-id="anatomy-code"><code class="php font--16" data-trim data-noescape data-line-numbers>
+          class Person {
+              public string $name = '' {
+                  get => $this->name;
+                  set {
+                      $this->name = $value;
+                  }
+              }
+          }
+
+          // This hasn't changed!
+          $p = new Person();
+          $p->name = "Larry";
+          print $p->name . PHP_EOL;
+        </code></pre>
+        <aside class="notes">
+          <ul>
+            <li>Same idea as short-closures</li>
+          </ul>
+        </aside>
+      </section>
+      <section data-auto-animate data-auto-animate-id="hooks">
+        <h3 data-id="anatomy-title">Short-hand <code>set</code></h3>
+        <pre data-id="anatomy-code"><code class="php font--16" data-trim data-noescape data-line-numbers>
+          class Person {
+              public string $name = '' {
+                  get => $this->name;
+                  set => $value;
+              }
+          }
+
+          // This hasn't changed!
+          $p = new Person();
+          $p->name = "Larry";
+          print $p->name . PHP_EOL;
+        </code></pre>
+        <aside class="notes">
+          <ul>
+            <li>Return value from short-set gets assigned to property.</li>
+            <li>Still haven't changed any behavior in this code, but shown skeleton</li>
+          </ul>
+        </aside>
+      </section>
+      <section data-auto-animate data-auto-animate-id="hooks-why">
+        <h3 data-id="title">But... why?</h3>
+        <pre data-id="code"><code class="php font--16" data-trim data-noescape data-line-numbers>
+          class Person {
+              private(set) string $fullName;
+
+              public function __construct(
+                public string $firstName,
+                public string $lastName,
+                public int $age,
+              ) {
+                  $this->fullName = sprintf('%s %s', $this->firstName, $this->lastName);
+              }
+          }
+
+          $p = new Person('James', 'Kirk');
+          $p->lastName = 'garfield';
+          print $p->fullName . PHP_EOL;
+        </code></pre>
+        <aside class="notes">
+          <ul>
+            <li>Now want to capitalize the first and last names automatically</li>
+          </ul>
+        </aside>
+      </section>
+      <section data-auto-animate data-auto-animate-id="hooks-why">
+        <h3 data-id="title">But... why?</h3>
+        <pre data-id="code"><code class="php font--16" data-trim data-noescape data-line-numbers>
+          class Person {
+              private(set) string $fullName {
+                  get => sprintf('%s %s', $this->firstName, $this->lastName);
+              }
+
+              public function __construct(
+                public string $firstName { set => ucfirst($value); },
+                public string $lastName { set => ucfirst($value); },
+                public int $age,
+              ) {}
+          }
+
+          // The API hasn't changed!
+          $p = new Person('James', 'Kirk');
+          $p->lastName = 'garfield';
+          print $p->fullName . PHP_EOL;
+        </code></pre>
+        <aside class="notes">
+          <ul>
+            <li>Previously, would have to use a method from the start</li>
+            <li>That's a lot of extra boilerplate code.</li>
+            <li>This is the reason stated in the RFC.</li>
+          </ul>
+        </aside>
+      </section>
+      <section data-auto-animate data-auto-animate-id="hooks-why">
+        <h3 data-id="title">But... why?</h3>
+        <pre data-id="code"><code class="php font--14" data-trim data-noescape data-line-numbers>
+          class Person {
+              private(set) string $fullName {
+                  get => sprintf('%s %s', $this->firstName, $this->lastName);
+              }
+
+              public string $firstName {
+                  set => ucfirst($value);
+              },
+
+              public string $lastName {
+                  set => ucfirst($value);
+              },
+
+              public function __construct(
+                string $first,
+                string $last,
+                public int $age,
+              ) {
+                  $this->firstName = $first;
+                  $this->lastName = $last;
+              }
+          }
+
+          // The API hasn't changed!
+          $p = new Person('James', 'Kirk');
+          $p->lastName = 'garfield';
+          print $p->fullName . PHP_EOL;
+        </code></pre>
+        <aside class="notes">
+          <ul>
+            <li>Hooks in the constructor are OK if short, but don't have to.</li>
+          </ul>
+        </aside>
+      </section>
+      <section>
+        <h2>Hooks are an escape hatch</h2>
+        <ul>
+          <li class="fragment">Don't use them</li>
+          <li class="fragment">OK to make properties public (read or write)</li>
+          <li class="fragment">Use hooks to preserve BC</li>
+          <li class="fragment">No more stupid get/set methods!</li>
+        </ul>
+        <p class="fragment bigtext"></p>
+      </section>
+      <section>
+        <h2>If you stop here, that's OK!</h2>
+        <div class="fragment">
+          <img src="assets/philosoraptor-all-in-hooks.jpg" alt="What if we went all-in on hooks?">
+          <h2>But could we do more...?</h2>
+        </div>
+      </section>
+    </section>
+    <section>
+      <section>
+        <img src="assets/morpheus-no-properties.jpg" alt="What if I told you PHP 8.3 didn't have properties at all?">
+      </section>
+      <section>
+        <img src="assets/philosoraptor-what-is-property.jpg" alt="What even is a property?">
+      </section>
+      <section>
+        <h2>Wikipedia answers</h2>
+        <blockquote style="font-size: 1.2rem">A <em>property</em>, in some object-oriented programming languages, is a
+          special sort of class member, <em>intermediate in functionality</em> between
+          a <em>field</em> (or data member) and a method. The syntax for reading and writing of
+          properties is like for fields, but property reads and writes are (usually)
+          translated to 'getter' and 'setter' method calls." </blockquote>
+        <cite><a href="https://en.wikipedia.org/wiki/Property_(programming)">Wikipedia: Property</a></cite>
+        <div class="fragment">
+          <blockquote style="font-size: 1.2rem; margin-block-start: 3rem;">In data hierarchy, a field (data field) is a variable in a
+            record. A record, also known as a data structure, allows logically related
+            data to be identified by a single name." </blockquote>
+          <cite><a href="https://en.wikipedia.org/wiki/Field_(computer_science)">Wikipedia: Field (CS)</a></cite>
+        </div>
+        <aside class="notes">
+          <ul>
+            <li>This is how the terms are used in C# and Kotlin</li>
+            <li>Swift calls them stored and computed properties</li>
+          </ul>
+        </aside>
+      </section>
+      <section>
+        <p class="oversize">Field is a physical aspect of an object</p>
+        <p class="oversize fragment">Property is a logical aspect of an object</p>
+      </section>
+      <section>
+        <div><img src="assets/mind-blown-properties.jpg" alt="We've never had properties before now!"></div>
+        <p class="fragment">This changes everything...</p>
+      </section>
+      <section>
+        <h2>How we learned OOP in my day</h2>
+        <ol>
+          <li class="fragment">Fields are always private/protected</li>
+          <li class="fragment">All interaction through methods!</li>
+        </ol>
+        <p class="fragment">Fields are data.  Methods are behavior.</p>
+        <p class="fragment">You cannot enforce rules on fields if exposed.</p>
+        <aside class="notes">
+          <ul>
+            <li>Was this you?</li>
+            <li>It was me</li>
+          </ul>
+        </aside>
+      </section>
+      <section>
+        <h2>What couldn't fields do?</h2>
+        <dl>
+          <dt class="fragment">Enforce a data type</dt>
+          <dd class="fragment">They can since PHP 7.4</dd>
+          <dt class="fragment">Be exposed for read without exposing arbitrary write</dt>
+          <dd class="fragment"><code>readonly</code> (8.1) and <code>private(set)</code> (8.4)</dd>
+          <dt class="fragment">Be counted on to exist</dt>
+          <dd class="fragment">Interface properties in 8.4</dd>
+          <dt class="fragment">Enforce validation rules</dt>
+          <dd class="fragment">But now properties can, with hooks</dd>
+          <dt class="fragment">Enforce business logic</dt>
+          <dd class="fragment">But now properties can, with hooks</dd>
+          <dt class="fragment">Be dynamically computed</dt>
+          <dd class="fragment">But now properties can, with hooks</dd>
+        </dl>
+        <aside class="notes">
+          <ul>
+            <li>Business rules include inter-dependency</li>
+          </ul>
+        </aside>
+      </section>
+      <section>
+        <img src="assets/anything-fields-properties-better.jpg" alt="Anything Fields can do Properties can do better">
+      </section>
+      <section>
+        <p class="oversize">Join me in rethinking those guidelines</p>
+      </section>
+    </section>
+    <section>
+      <section>
+        <h2>What is an object?</h2>
+        <dl>
+          <dt class="fragment">Product type</dt>
+          <dd class="fragment">Named tuple of typed values. Values exposed, often immutable</dd>
+          <dt class="fragment">Opaque Value objects</dt>
+          <dd class="fragment">Hidden internals; <code>DateTime</code>, <code>Money</code>, <code>Request</code>; often immutable</dd>
+          <dt class="fragment">Entity</dt>
+          <dd class="fragment">Classic OOP academia; often prop/get/set combo</dd>
+          <dt class="fragment">Closures with funny syntax</dt>
+          <dd class="fragment">AKA "service objects"; no data, just functions and dependencies</dd>
+        </dl>
+        <aside class="notes">
+          <ul>
+            <li>No one definition of this, either</li>
+            <li>Product meaning cardinality is "product" (times) the cardinality of members</li>
+            <li>Not interested in Service objects today</li>
+          </ul>
+        </aside>
+      </section>
+      <section>
+        <h2>What is a Property</h2>
+        <p class="oversize fragment">A Property is a logical aspect of an object</p>
+        <p class="fragment">Don't care about the underlying details anymore</p>
+      </section>
+      <section>
+        <h2>Properties</h2>
+        <ul>
+          <li class="fragment">Ask an object about itself</li>
+          <li class="fragment">Tell an object about itself</li>
+        </ul>
+      </section>
     </section>
 
     <div style="display:none">
