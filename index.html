@@ -545,6 +545,280 @@
         </aside>
       </section>
     </section>
+    <section>
+      <section>
+        <h2>Properties in action</h2>
+      </section>
+      <section data-auto-animate data-auto-animate-id="use-case-bc">
+        <h3 data-id="title">Backward compatibility shim</h3>
+        <pre data-id="code"><code class="php font--16" data-trim data-noescape data-line-numbers>
+          class Person {
+              private(set) string $fullName {
+                  get => sprintf('%s %s', $this->firstName, $this->lastName);
+              }
+
+              public function __construct(
+                public string $firstName { set => ucfirst($value); },
+                public string $lastName { set => ucfirst($value); },
+                public int $age,
+              ) {}
+          }
+
+          // The API hasn't changed!
+          $p = new Person('James', 'Kirk');
+          $p->lastName = 'garfield';
+          print $p->fullName . PHP_EOL;
+        </code></pre>
+        <aside class="notes">
+          <ul>
+            <li>Don't use it, just eliminate boilerplate because you could use it.</li>
+          </ul>
+        </aside>
+      </section>
+      <section data-auto-animate data-auto-animate-id="example-page">
+        <h3 data-id="title">Data object interface</h3>
+        <pre data-id="code"><code class="php font--16" data-trim data-noescape data-line-numbers="">
+          interface Page {
+              public string $title { get; }
+              public string $summary { get; }
+              public array $tags { get; }
+              public bool $hidden { get; }
+              public bool $routable { get; }
+              public DateTimeImmutable $publishDate { get; }
+              public DateTimeImmutable $lastModifiedDate { get; }
+
+              public LogicalPath $path { get; }
+              public PhysicalPath $physicalPath { get; }
+              public string $folder { get; }
+          }
+        </code></pre>
+        <aside class="notes">
+          <ul>
+            <li>All pages must have these aspects/features/properties</li>
+            <li>None need be writeable!</li>
+            <li>Real example from real code, only slight simplification</li>
+          </ul>
+        </aside>
+      </section>
+      <section data-auto-animate data-auto-animate-id="example-page">
+        <h3 data-id="title">Data object interface</h3>
+        <pre data-id="code"><code class="php font--16" data-trim data-noescape data-line-numbers="">
+          interface Page {
+              public string $title { get; }
+              public string $summary { get; }
+              public array $tags { get; }
+              public bool $hidden { get; }
+              public bool $routable { get; }
+              public DateTimeImmutable $publishDate { get; }
+              public DateTimeImmutable $lastModifiedDate { get; }
+
+              public LogicalPath $path { get; }
+              public PhysicalPath $physicalPath { get; }
+              public string $folder { get; }
+          }
+
+          class PageRecord implements Page {
+              public function __construct(
+                  private(set) string $title,
+                  private(set) string $summary,
+                  private(set) DateTimeImmutable $publishDate,
+                  // Implementation detail for this class.
+                  private array $files,
+                  // ...
+              ) {}
+          }
+        </code></pre>
+        <aside class="notes">
+          <ul>
+            <li>PageRecord wraps multiple files into one logical page</li>
+            <li>Could also use readonly if you prefer.</li>
+            <li>What would methods add?  Nothing!</li>
+          </ul>
+        </aside>
+      </section>
+      <section data-auto-animate data-auto-animate-id="example-page">
+        <h3 data-id="title">Lazily computed values</h3>
+        <pre data-id="code"><code class="php font--16" data-trim data-noescape data-line-numbers="|2-3">
+          class PageRecord implements Page {
+              // This is derived.  But how?
+              public PhysicalPath $physicalPath;
+
+              /** @param array&lt;string, File> $files */
+              public function __construct(
+                  private(set) array $files,
+                  // ...
+              ) {}
+          }
+        </code></pre>
+        <aside class="notes">
+          <ul>
+            <li>Focus on PageRecord</li>
+            <li>How to derive $physicalPath from files list?</li>
+          </ul>
+        </aside>
+      </section>
+      <section data-auto-animate data-auto-animate-id="example-page">
+        <h3 data-id="title">Lazily computed values</h3>
+        <pre data-id="code"><code class="php font--16" data-trim data-noescape data-line-numbers="|10-14|2-4|6-8">
+          class PageRecord implements Page {
+              private File $activeFile {
+                  get => $this->activeFile ??= array_values($this->files)[0];
+              }
+
+              public PhysicalPath $physicalPath {
+                  get => $this->activeFile->physicalPath;
+              }
+
+              /** @param array&lt;string, File> $files */
+              public function __construct(
+                  private(set) array $files,
+                  // ...
+              ) {}
+          }
+        </code></pre>
+        <aside class="notes">
+          <ul>
+            <li>$activeFile is computed on-the-fly and cached</li>
+            <li>Fully transparent</li>
+            <li>Other code can use it as though it were just there.</li>
+            <li>Changing definition of "Active" is one line.</li>
+            <li>Could $activeFile and $physicalPath be methods? Yes, but why? They're properties of this page.</li>
+          </ul>
+        </aside>
+      </section>
+      <section data-auto-animate data-auto-animate-id="example-page">
+        <h3 data-id="title">Lazily computed values</h3>
+        <pre data-id="code"><code class="php font--16" data-trim data-noescape data-line-numbers="2-7,10">
+          class PageRecord implements Page {
+              // You need this either way, so why not use it?
+              private File $activeFile;
+
+              private function activeFile(): File {
+                  return $this->activeFile ??= array_values($this->files)[0];
+              }
+
+              public PhysicalPath $physicalPath {
+                  get => $this->activeFile()->physicalPath;
+              }
+
+              /** @param array&lt;string, File> $files */
+              public function __construct(
+                  private(set) array $files,
+                  // ...
+              ) {}
+          }
+        </code></pre>
+        <aside class="notes">
+          <ul>
+            <li>Even as a method, still need a place to cache it.</li>
+            <li>Keeping the property and method separate serves no purpose.</li>
+          </ul>
+        </aside>
+      </section>
+      <section data-auto-animate data-auto-animate-id="example-page">
+        <h3 data-id="title">Postel's law</h3>
+        <p><q>Be conservative in what you send,<br />be liberal in what you accept.</q></p>
+        <pre data-id="code"><code class="php font--16" data-trim data-noescape data-line-numbers="|9,13|2-6">
+          class PageRecord implements Page {
+              private(set) LogicalPath $logicalPath {
+                  set(LogicalPath|string $value) => is_string($value)
+                                                    ? LogicalPath::create($value)
+                                                    : $value;
+              }
+
+              public function __construct(
+                  LogicalPath|string $logicalPath,
+                  private(set) array $files,
+                  // ...
+              ) {
+                  $this->logicalPath = $logicalPath;
+              }
+          }
+        </code></pre>
+        <p class="fragment">This is also a form of validation!</p>
+        <aside class="notes">
+          <ul>
+            <li>Could use promotion here, but felt it was messy.</li>
+            <li>LogicalPath::create() won't succeed unless $value is a correct string.</li>
+          </ul>
+        </aside>
+      </section>
+      <section data-auto-animate data-auto-animate-id="example-page">
+        <h3 data-id="title">Database record hydration</h3>
+        <pre data-id="code"><code class="php font--16" data-trim data-noescape data-line-numbers="">
+          class PageRecord implements Page {
+              private(set) LogicalPath $logicalPath {
+                  set(LogicalPath|string $value) => is_string($value)
+                                                    ? LogicalPath::create($value)
+                                                    : $value;
+              }
+
+              public function __construct(
+                  LogicalPath|string $logicalPath,
+                  private(set) array $files,
+                  // ...
+              ) {
+                  $this->logicalPath = $logicalPath;
+              }
+          }
+
+          class PageRepository {
+              public function readPage(LogicalPath $path): ?PageRecord {
+                  $result = $this->conn->query(/* ... */, [$path])->queryOne();
+
+                  return $result ? new PageRecord(...$result) : null;
+              }
+          }
+        </code></pre>
+        <aside class="notes">
+          <ul>
+            <li>Any upcasting of value objects happens inside PageRecord, where it belongs!</li>
+            <li>LogicalPath is Stringable, so can use in the query params.</li>
+            <li>This is all the read model.  What is the write model?</li>
+          </ul>
+        </aside>
+      </section>
+      <section data-auto-animate data-auto-animate-id="example-page-write">
+        <h3 data-id="title">Database record derivation</h3>
+        <pre data-id="code"><code class="php font--14" data-trim data-noescape data-line-numbers="">
+          class PageData {
+              public string $title {
+                  get => $this->values(__PROPERTY__)[0];
+              }
+
+              public bool $hidden {
+                  get => array_all($this->values(__PROPERTY__), static fn($x): bool => (bool)$x);
+              }
+
+              public \DateTimeImmutable $publishDate {
+                  get => \max($this->values(__PROPERTY__));
+              }
+
+              public array $files {
+                  get => array_map(static fn(ParsedFile $f) => $f->toFile(), $this->parsedFiles);
+              }
+
+              // ...
+
+              /** @param array&lt;string, ParsedFile> $parsedFiles */
+              public function __construct(
+                  public string $logicalPath,
+                  private array $parsedFiles,
+              ) {}
+
+              private function values(string $property): array {
+                  return array_column($this->parsedFiles, $property);
+              }
+          }
+        </code></pre>
+        <aside class="notes">
+          <ul>
+            <li>Write model is all derived off of other values.</li>
+            <li>Not sure if I want this slide or not...</li>
+          </ul>
+        </aside>
+      </section>
+    </section>
 
     <div style="display:none">
       * Intro
