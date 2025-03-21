@@ -98,7 +98,7 @@
       </section>
       <section data-auto-animate data-auto-animate-id="aviz">
         <h3>Asymmetric visibility</h3>
-        <pre data-id="code"><code class="php font--16" data-trim data-noescape data-line-numbers>
+        <pre data-id="example-code"><code class="php font--16" data-trim data-noescape data-line-numbers>
           class Person {
               private(set) string $fullName;
 
@@ -365,7 +365,6 @@
           <li class="fragment">Use hooks to preserve BC</li>
           <li class="fragment">No more stupid get/set methods!</li>
         </ul>
-        <p class="fragment bigtext"></p>
       </section>
       <section>
         <h2>If you stop here, that's OK!</h2>
@@ -452,7 +451,17 @@
         <img src="assets/anything-fields-properties-better.jpg" alt="Anything Fields can do Properties can do better">
       </section>
       <section>
-        <p class="oversize">Join me in rethinking those guidelines</p>
+        <p class="oversize">Join me in rethinking our assumptions</p>
+      </section>
+      <section>
+        <blockquote>Programming languages teach you not to want what they cannot provide.</blockquote>
+        <cite>&mdash;Paul Graham, <a href="https://paulgraham.com/acl.html">ANSI Common Lisp</a></cite>
+        <aside class="notes">
+          <ul>
+            <li>Everything new feels alien at first</li>
+            <li>Give yourself time with a feature before dismissing or endorsing</li>
+          </ul>
+        </aside>
       </section>
     </section>
     <section>
@@ -460,11 +469,11 @@
         <h2>What is an object?</h2>
         <dl>
           <dt class="fragment">Product type</dt>
-          <dd class="fragment">Named tuple of typed values. Values exposed, often immutable</dd>
+          <dd class="fragment">Named tuple of typed values. Often exposed: <code>Point(x, y)</code></dd>
           <dt class="fragment">Opaque Value objects</dt>
           <dd class="fragment">Hidden internals; <code>DateTime</code>, <code>Money</code>, <code>Request</code>; often immutable</dd>
           <dt class="fragment">Entity</dt>
-          <dd class="fragment">Classic OOP academia; often prop/get/set combo</dd>
+          <dd class="fragment">Classic OOP academia; often field/get/set. <code>Cat extends Animal</code></dd>
           <dt class="fragment">Closures with funny syntax</dt>
           <dd class="fragment">AKA "service objects"; no data, just functions and dependencies</dd>
         </dl>
@@ -478,7 +487,7 @@
       </section>
       <section>
         <h2>What is a Property</h2>
-        <p class="oversize fragment">A Property is a logical aspect of an object</p>
+        <p class="oversize fragment">A Property is a logical <em>aspect</em> or <em>feature</em> of an object</p>
         <p class="fragment">Don't care about the underlying details anymore</p>
       </section>
       <section>
@@ -487,6 +496,53 @@
           <li class="fragment">Ask an object about itself</li>
           <li class="fragment">Tell an object about itself</li>
         </ul>
+        <aside class="notes">
+          <ul>
+            <li>If what you're doing is one of those, it may be a property</li>
+            <li>Whether there is additional logic involved is now irrelevant!</li>
+          </ul>
+        </aside>
+      </section>
+      <section>
+        <h2>For example</h2>
+        <pre data-id="code"><code class="php font--16" data-line-numbers="1-2|4-5|7-8|10-11|13-14|" data-trim data-noescape>
+          // What timezone is this Date in?
+          $timestamp->timezone;
+
+          // Change the timezone.
+          $timestamp->timezone = new DateTimeZone('America/Chicago');
+
+          // The ID of the object.
+          $entity->id;
+
+          // How big is this list?
+          $list->size;
+
+          // The post this comment is on.
+          $comment->post;
+        </code></pre>
+        <p class="fragment">Are these mutable values? Computed? ¯\_(ツ)_/¯</p>
+        <aside class="notes">
+          <ul>
+            <li>Don't think about implementation, think about conceptualization</li>
+            <li>What value do the words "get" and "set" add over language syntax? None!</li>
+          </ul>
+        </aside>
+      </section>
+      <section>
+        <h2 class="oversize">&lt;aside></h2>
+        <p class="oversize">Pop quiz: What is the second-longest entry in the OED?</p>
+        <p class="fragment oversize"><em>"get"</em></p>
+        <p class="fragment oversize">Pop quiz: What is the longest entry in the OED?</p>
+        <p class="fragment oversize"><em>"set"</em></p>
+        <p class="fragment oversize">These words mean everything, so they mean nothing</p>
+        <h2 class="oversize">&lt;/aside></h2>
+        <aside class="notes">
+          <ul>
+            <li>Oxford English Dictionary</li>
+            <li>Dozens of pages each!</li>
+          </ul>
+        </aside>
       </section>
     </section>
 
@@ -522,6 +578,8 @@
       * Things you CAN do with hooks
         * BC shim
         * Cached value
+        * Upcasting inside a value object upcast from an array record (eg, DB hydration)
+
       *
 
 
