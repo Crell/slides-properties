@@ -868,7 +868,7 @@
         </code></pre>
         <aside class="notes">
           <ul>
-            <li>Just change the spelling for the easy ones.</li>
+            <li>Just change the spelling for the easy ones. Make the class readonly.</li>
             <li>These are all aspects of the request. "Properties" of it.</li>
             <li>Cannot do headers or attributes, as those have arguments.</li>
             <li>Those are an operation *on* the property.</li>
@@ -907,6 +907,185 @@
             <li>Virtual properties, do as you will.</li>
             <li>hasHeader() could be just an isset check, as above with nullsafe method.</li>
             <li>Not sold on this myself, but it's a valid option.</li>
+          </ul>
+        </aside>
+      </section>
+      <section>
+        <p class="oversize">It used to be anything interesting had to be a method</p>
+        <p class="oversize fragment">Now, design your API around concepts,<br>not implementation</p>
+        <aside class="notes">
+          <ul>
+            <li>This isn't "exposing implementation".  Properties still hide implementation!</li>
+            <li>Methods for no purpose but validation were exposing implementation!</li>
+          </ul>
+        </aside>
+      </section>
+      <section data-auto-animate data-auto-animate-id="example-attributeutils">
+        <h3 data-id="title">Definition interfaces</h3>
+        <h4>The common way</h4>
+        <pre data-id="code"><code class="php font--16" data-trim data-noescape data-line-numbers="|18-24">
+          interface ParseProperties {
+              public function setProperties(array $properties): void;
+              public function includePropertiesByDefault(): bool;
+              public function propertyAttribute(): string;
+          }
+
+          class ClassWithProperties implements ParseProperties {
+              public array $properties = [];
+
+              public function __construct(
+                  public readonly int $a = 0,
+              ) {}
+
+              public function setProperties(array $properties): void {
+                  $this->properties = $properties;
+              }
+
+              public function includePropertiesByDefault(): bool {
+                  return true;
+              }
+
+              public function propertyAttribute(): string {
+                  return BasicProperty::class;
+              }
+          }
+        </code></pre>
+        <aside class="notes">
+          <ul>
+            <li>Methods: Stupidly verbose 90% of the time</li>
+            <li>But can make the values dynamic (eg, from constructor params)</li>
+          </ul>
+        </aside>
+      </section>
+      <section data-auto-animate data-auto-animate-id="example-attributeutils">
+        <h3 data-id="title">Definition interfaces</h3>
+        <h4>The Laravel way</h4>
+        <pre data-id="code"><code class="php font--16" data-trim data-noescape data-line-numbers="|8-10">
+          interface ParseProperties {
+              public function setProperties(array $properties): void;
+          }
+
+          class ClassWithProperties implements ParseProperties {
+              public array $properties = [];
+
+              // Not defined anywhere, you have to just know it.
+              public bool $includeByDefault = true;
+              public string $propertyAttribute = BasicProperty::class;
+
+              public function __construct(
+                  public readonly int $a = 0,
+              ) {}
+
+              public function setProperties(array $properties): void {
+                  $this->properties = $properties;
+              }
+          }
+        </code></pre>
+        <aside class="notes">
+          <ul>
+            <li>Great, now they're mutable.</li>
+            <li>No explicit definition for them.</li>
+            <li>Real code from Crell/AttributeUtils</li>
+          </ul>
+        </aside>
+      </section>
+      <section data-auto-animate data-auto-animate-id="example-attributeutils">
+        <h3 data-id="title">Definition interfaces</h3>
+        <h4>The Symfony/Attributes way</h4>
+        <pre data-id="code"><code class="php font--16" data-trim data-noescape data-line-numbers="">
+          interface ParseProperties {
+              public function setProperties(array $properties): void;
+          }
+
+          #[PropertiesToParse(
+              includeByDefault: true,
+              propertyAttribute: BasicProperty::class,
+          )]
+          class ClassWithProperties implements ParseProperties {
+              public array $properties = [];
+
+              public function __construct(
+                  public readonly int $a = 0,
+              ) {}
+
+              public function setProperties(array $properties): void {
+                  $this->properties = $properties;
+              }
+          }
+        </code></pre>
+        <aside class="notes">
+          <ul>
+            <li>Not mutable, out of the code flow</li>
+            <li>But now need interface for behavior AND attribute for definition</li>
+            <li>Definition cannot be dynamic.</li>
+          </ul>
+        </aside>
+      </section>
+      <section data-auto-animate data-auto-animate-id="example-attributeutils">
+        <h3 data-id="title">Definition interfaces</h3>
+        <h4>The PHP 8.4 way</h4>
+        <pre data-id="code"><code class="php font--16" data-trim data-noescape data-line-numbers="|4-5,11-12">
+            interface ParseProperties {
+                public function setProperties(array $properties): void;
+
+                public bool $includePropertiesByDefault { get; }
+                public string $propertyAttribute { get; }
+            }
+
+          class ClassWithProperties implements ParseProperties {
+              public array $properties = [];
+
+              private(set) bool $includePropertiesByDefault = true;
+              public bool $propertyAttribute => BasicProperty::class;
+
+              public function __construct(
+                  public readonly int $a = 0,
+              ) {}
+
+              public function setProperties(array $properties): void {
+                  $this->properties = $properties;
+              }
+          }
+        </code></pre>
+        <aside class="notes">
+          <ul>
+            <li>Could use private-set or virtual prop to fulfill interface</li>
+            <li></li>
+          </ul>
+        </aside>
+      </section>
+      <section data-auto-animate data-auto-animate-id="example-attributeutils">
+        <h3 data-id="title">Definition interfaces</h3>
+        <h4>The dynamic way</h4>
+        <pre data-id="code"><code class="php font--16" data-trim data-noescape data-line-numbers="4-5,11-12,14, 16-18">
+            interface ParseProperties {
+                public function setProperties(array $properties): void;
+
+                public bool $includePropertiesByDefault { get; }
+                public string $propertyAttribute { get; }
+            }
+
+          class ClassWithProperties implements ParseProperties {
+              public array $properties = [];
+
+              public bool $includePropertiesByDefault { get => $this->include; }
+              public bool $propertyAttribute => $this->propertiesAs;
+
+              public function __construct(
+                  public readonly int $a = 0,
+                  private readonly $include = true;
+                  private readonly $propertiesAs = BasicProperty::class,
+              ) {}
+
+              public function setProperties(array $properties): void {
+                  $this->properties = $properties;
+              }
+          }
+        </code></pre>
+        <aside class="notes">
+          <ul>
+            <li>Could use private-set or virtual prop to fulfill interface</li>
+            <li></li>
           </ul>
         </aside>
       </section>
