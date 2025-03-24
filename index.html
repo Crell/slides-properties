@@ -818,6 +818,98 @@
           </ul>
         </aside>
       </section>
+      <section data-auto-animate data-auto-animate-id="example-request">
+        <h3 data-id="title">HTTP Request / PSR-7 redux</h3>
+        <pre data-id="code"><code class="php font--16" data-trim data-noescape data-line-numbers="">
+          interface ServerRequestInterface {
+              public function getProtocolVersion(): string;
+              public function getBody(): StreamInterface;
+              public function getMethod(): string;
+              public function getUri(): Uri;
+              public function getParsedBody(): null|array|object;
+              public function getHeaders(): array;
+              public function getAttributes(): array;
+
+              public function hasHeader(string $name): bool;
+              public function getHeader(string $name): array;
+              public function getHeaderLine(string $name): string;
+              public function getAttribute(string $name, mixed $default = null): mixed;
+
+              // Lots of with*() methods here, off topic.
+          }
+        </code></pre>
+        <aside class="notes">
+          <ul>
+            <li>with() methods don't modify in place, require args, so still methods</li>
+            <li>Added types for clarity</li>
+            <li>What could it look like today?</li>
+          </ul>
+        </aside>
+      </section>
+      <section data-auto-animate data-auto-animate-id="example-request">
+        <h3 data-id="title">HTTP Request modern version</h3>
+        <pre data-id="code"><code class="php font--16" data-trim data-noescape data-line-numbers="|2-8|10-14|11-12">
+          interface ServerRequestInterface {
+              public string $protocolVersion { get; }
+              public StreamInterface $body { get; }
+              public string $method { get; }
+              public Uri $uri { get; }
+              public null|array|object $parsedBody { get; }
+              public array $headers { get; }
+              public array $attributes { get; }
+
+              public function hasHeader(string $name): bool;
+              public function getHeader(string $name): array;
+              public function getHeaderLine(string $name): string;
+              public function getAttribute(string $name, mixed $default = null): mixed;
+
+              // Lots of with*() methods here, off topic.
+          }
+        </code></pre>
+        <aside class="notes">
+          <ul>
+            <li>Just change the spelling for the easy ones.</li>
+            <li>These are all aspects of the request. "Properties" of it.</li>
+            <li>Cannot do headers or attributes, as those have arguments.</li>
+            <li>Those are an operation *on* the property.</li>
+            <li>getHeader() vs getHeaderLine(): Different representations of the data, so can't have a single property.</li>
+          </ul>
+        </aside>
+      </section>
+      <section data-auto-animate data-auto-animate-id="example-request">
+        <h3 data-id="title">HTTP Request modern version</h3>
+        <pre data-id="code"><code class="php font--16" data-trim data-noescape data-line-numbers="7-8,16-21">
+          interface ServerRequestInterface {
+              public string $protocolVersion { get; }
+              public StreamInterface $body { get; }
+              public string $method { get; }
+              public Uri $uri { get; }
+              public null|array|object $parsedBody { get; }
+              /** @var array&lt;string, Header> */
+              public array $headers { get; }
+              public array $attributes { get; }
+
+              public function hasHeader(string $name): bool;
+
+              // Lots of with*() methods here, off topic.
+          }
+
+          class Header {
+              public array $raw { get => ... }
+              public string $line { get => ... }
+          }
+
+          $value = $request->headers['user-agent']?->line;
+        </code></pre>
+        <aside class="notes">
+          <ul>
+            <li>Header has different representations, so those are separate properties.</li>
+            <li>Virtual properties, do as you will.</li>
+            <li>hasHeader() could be just an isset check, as above with nullsafe method.</li>
+            <li>Not sold on this myself, but it's a valid option.</li>
+          </ul>
+        </aside>
+      </section>
     </section>
 
     <div style="display:none">
