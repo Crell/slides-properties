@@ -451,7 +451,7 @@
         <img src="assets/anything-fields-properties-better.jpg" alt="Anything Fields can do Properties can do better">
       </section>
       <section>
-        <p class="oversize">Join me in rethinking our assumptions</p>
+        <img src="assets/vader-join-rethink.jpg" alt="Join me in rethinking your PHP 5-based assumptions">
       </section>
       <section>
         <blockquote>Programming languages teach you not to want what they cannot provide.</blockquote>
@@ -929,7 +929,7 @@
       <section data-auto-animate data-auto-animate-id="example-attributeutils">
         <h3 data-id="title">Definition interfaces</h3>
         <h4>The common way</h4>
-        <pre data-id="code"><code class="php font--16" data-trim data-noescape data-line-numbers="|18-24">
+        <pre data-id="code"><code class="php font--16" data-trim data-noescape data-line-numbers="|18-26">
           interface ParseProperties {
               public function setProperties(array $properties): void;
               public function includePropertiesByDefault(): bool;
@@ -947,11 +947,13 @@
                   $this->properties = $properties;
               }
 
-              public function includePropertiesByDefault(): bool {
+              public function includePropertiesByDefault(): bool
+              {
                   return true;
               }
 
-              public function propertyAttribute(): string {
+              public function propertyAttribute(): string
+              {
                   return BasicProperty::class;
               }
           }
@@ -1042,7 +1044,7 @@
               public array $properties = [];
 
               private(set) bool $includePropertiesByDefault = true;
-              public bool $propertyAttribute => BasicProperty::class;
+              public bool $propertyAttribute { get => BasicProperty::class; }
 
               public function __construct(
                   public readonly int $a = 0,
@@ -1056,7 +1058,7 @@
         <aside class="notes">
           <ul>
             <li>Could use private-set or virtual prop to fulfill interface</li>
-            <li></li>
+            <li>private-set is faster, property read not method call</li>
           </ul>
         </aside>
       </section>
@@ -1075,7 +1077,7 @@
               public array $properties = [];
 
               public bool $includePropertiesByDefault { get => $this->include; }
-              public bool $propertyAttribute => $this->propertiesAs;
+              public bool $propertyAttribute { get => $this->propertiesAs; }
 
               public function __construct(
                   public readonly int $a = 0,
