@@ -23,7 +23,7 @@
 <body class="skin-blue">
 <div class="reveal">
   <footer>
-    <img src="assets/lz-logo-black.svg" alt="" />
+    <img src="assets/makershub.svg" alt="Makershub.ai" />
     <span class="name">@Crell@phpc.social</span>
   </footer>
 	<div class="slides">
@@ -40,7 +40,7 @@
         <a href="https://bit.ly/fn-php"><img src="assets/thinking-functionally.png" width="175px;" alt="Cover of Thinking Functionally in PHP" /></a>
 
         <ul style="text-wrap: nowrap">
-          <li style="margin-top: 1em;">Hire me!</li>
+          <li style="margin-top: 1em;">Principal Engineer at MakersHub</li>
           <li style="margin-top: 1em;">PHP-FIG Core Committee</li>
           <li style="margin-top: 1em;">PHP Core Contributor</li>
           <li style="margin-top: 1em;">General purpose pedant</li>
@@ -52,6 +52,12 @@
     <section>
       <section>
         <h2>New PHP version! (8.4)</h2>
+        <aside class="notes">
+          <ul>
+            <li>You may have heard</li>
+            <li>You know what that means...</li>
+          </ul>
+        </aside>
       </section>
       <section>
         <h3>New Toys!</h3>
@@ -131,7 +137,6 @@
               public function fullName(): string;
           }
         </code></pre>
-        <p class="fragment oversize">Requires there be public read-or-write properties.</p>
         <aside class="notes">
           <ul>
             <li>Interfaces can now require properties. Read or write or both.</li>
@@ -183,7 +188,6 @@
               }
           }
 
-          // This hasn't changed!
           $p = new Person();
           $p->name = "Larry";
           print $p->name . PHP_EOL;
@@ -296,6 +300,43 @@
         <h3 data-id="title">But... why?</h3>
         <pre data-id="code"><code class="php font--16" data-trim data-noescape data-line-numbers>
           class Person {
+              private(set) string $fullName;
+
+              public function __construct(
+                private string $firstName,
+                private string $lastName,
+                private int $age,
+              ) {
+                  $this->fullName = sprintf('%s %s', $this->firstName, $this->lastName);
+              }
+
+              public function getFirstName(): string {
+                  return $this->firstName;
+              }
+
+              public function setFirstName(string $name): void {
+                  $this->firstName = ucfirst($name);
+                  $this->fullName = sprintf('%s %s', $this->firstName, $this->lastName);
+              }
+              // x3...
+          }
+
+          $p = new Person('James', 'Kirk');
+          $p->setLastName('garfield');
+          print $p->getFullName() . PHP_EOL;
+        </code></pre>
+        <aside class="notes">
+          <ul>
+            <li>This is what we used to have to do, just in case.</li>
+            <li>API break to add the methods later.</li>
+            <li>How often did you add stuff to the methods later?</li>
+          </ul>
+        </aside>
+      </section>
+      <section data-auto-animate data-auto-animate-id="hooks-why">
+        <h3 data-id="title">No more boilerplate!</h3>
+        <pre data-id="code"><code class="php font--16" data-trim data-noescape data-line-numbers="|7-8|2-4">
+          class Person {
               private(set) string $fullName {
                   get => sprintf('%s %s', $this->firstName, $this->lastName);
               }
@@ -314,8 +355,9 @@
         </code></pre>
         <aside class="notes">
           <ul>
-            <li>Previously, would have to use a method from the start</li>
-            <li>That's a lot of extra boilerplate code.</li>
+            <li>Can now sneak in changes without so much upfront-work.</li>
+            <li>Just add set hook to property, done</li>
+            <li>$fullName is a virtual property, computed on the fly.</li>
             <li>This is the reason stated in the RFC.</li>
           </ul>
         </aside>
@@ -370,7 +412,6 @@
         <h2>If you stop here, that's OK!</h2>
         <div class="fragment">
           <img src="assets/philosoraptor-all-in-hooks.jpg" alt="What if we went all-in on hooks?">
-          <h2>But could we do more...?</h2>
         </div>
       </section>
     </section>
@@ -412,16 +453,20 @@
       </section>
       <section>
         <h2>How we learned OOP in my day</h2>
+        <div>
+          <img src="assets/yell-cloud-oop.jpg" alt="Grandpa Simpson yelling at a cloud" height="300px">
+        </div>
         <ol>
           <li class="fragment">Fields are always private/protected</li>
           <li class="fragment">All interaction through methods!</li>
         </ol>
-        <p class="fragment">Fields are data.  Methods are behavior.</p>
+        <p class="fragment">Fields are data and implementation details.<br>Methods are behavior.</p>
         <p class="fragment">You cannot enforce rules on fields if exposed.</p>
         <aside class="notes">
           <ul>
             <li>Was this you?</li>
             <li>It was me</li>
+            <li>It was anyone writing PHP before 7.4...</li>
           </ul>
         </aside>
       </section>
@@ -521,7 +566,7 @@
           // The post this comment is on.
           $comment->post;
         </code></pre>
-        <p class="fragment">Are these mutable values? Computed? ¯\_(ツ)_/¯</p>
+        <p class="fragment">How are these implemented internally? ¯\_(ツ)_/¯</p>
         <aside class="notes">
           <ul>
             <li>Don't think about implementation, think about conceptualization</li>
@@ -654,7 +699,7 @@
         </code></pre>
         <aside class="notes">
           <ul>
-            <li>Focus on PageRecord</li>
+            <li>Focus on $physicalPath</li>
             <li>How to derive $physicalPath from files list?</li>
           </ul>
         </aside>
@@ -740,7 +785,7 @@
         <p class="fragment">This is also a form of validation!</p>
         <aside class="notes">
           <ul>
-            <li>Could use promotion here, but felt it was messy.</li>
+            <li>Can't use promotion here, because cannot have a wider set type that way.</li>
             <li>LogicalPath::create() won't succeed unless $value is a correct string.</li>
           </ul>
         </aside>
@@ -852,7 +897,7 @@
       </section>
       <section data-auto-animate data-auto-animate-id="example-request">
         <h3 data-id="title">HTTP Request modern version</h3>
-        <pre data-id="code"><code class="php font--16" data-trim data-noescape data-line-numbers="|2-8|10-14|11-12">
+        <pre data-id="code"><code class="php font--16" data-trim data-noescape data-line-numbers="2-8|10-14|11-12">
           interface ServerRequestInterface {
               public string $protocolVersion { get; }
               public StreamInterface $body { get; }
@@ -882,7 +927,7 @@
       </section>
       <section data-auto-animate data-auto-animate-id="example-request">
         <h3 data-id="title">HTTP Request modern version</h3>
-        <pre data-id="code"><code class="php font--16" data-trim data-noescape data-line-numbers="7-8,16-21">
+        <pre data-id="code"><code class="php font--16" data-trim data-noescape data-line-numbers="7-8,14-20">
           interface ServerRequestInterface {
               public string $protocolVersion { get; }
               public StreamInterface $body { get; }
@@ -893,8 +938,6 @@
               public array $headers { get; }
               public array $attributes { get; }
 
-              public function hasHeader(string $name): bool;
-
               // Lots of with*() methods here, off topic.
           }
 
@@ -904,6 +947,7 @@
           }
 
           $value = $request->headers['user-agent']?->line;
+          $hasHeader = isset($request->headers['user-agent']);
         </code></pre>
         <aside class="notes">
           <ul>
@@ -962,6 +1006,7 @@
           <ul>
             <li>Methods: Stupidly verbose 90% of the time</li>
             <li>But can make the values dynamic (eg, from constructor params)</li>
+            <li>Real code from Crell/AttributeUtils</li>
           </ul>
         </aside>
       </section>
@@ -993,7 +1038,6 @@
           <ul>
             <li>Great, now they're mutable.</li>
             <li>No explicit definition for them.</li>
-            <li>Real code from Crell/AttributeUtils</li>
           </ul>
         </aside>
       </section>
@@ -1093,7 +1137,27 @@
         <aside class="notes">
           <ul>
             <li>Could use private-set or virtual prop to fulfill interface</li>
-            <li></li>
+          </ul>
+        </aside>
+      </section>
+    </section>
+    <section>
+      <section>
+        <h2>Conclusions</h2>
+        <ul>
+          <li class="fragment">We have a new <em>mindset</em> available to us</li>
+          <li class="fragment">Using properties doesn't leak implementation details, get/set methods do!</li>
+          <li class="fragment">Same effect + less code = happy dev</li>
+          <li class="fragment">Data modeling <em>is</em> programming. Programming <em>is</em> data modeling.</li>
+        </ul>
+        <div class="fragment">
+          <p class="oversize">We're just getting started...</p>
+          <img src="assets/running-elephpant.gif" alt="An animated PHP elephant, running">
+        </div>
+        <aside class="notes">
+          <ul>
+            <li>"Define the problem such that it becomes solved."</li>
+            <li>We now have much stronger tools to define the problem.</li>
           </ul>
         </aside>
       </section>
