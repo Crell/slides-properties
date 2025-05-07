@@ -526,7 +526,7 @@
           <ul>
             <li>No one definition of this, either</li>
             <li>Product meaning cardinality is "product" (times) the cardinality of members</li>
-            <li>Not interested in Service objects today</li>
+            <li>Properties are applicable for all of them</li>
           </ul>
         </aside>
       </section>
@@ -534,6 +534,7 @@
         <h2>What is a Property</h2>
         <p class="oversize fragment">A Property is a logical <em>aspect</em> or <em>feature</em> of an object</p>
         <p class="fragment">Don't care about the underlying details anymore</p>
+        <p class="fragment"><em>Fields</em> are an implementation detail, <em>Properties</em> are an interface</p>
       </section>
       <section>
         <h2>Properties</h2>
@@ -926,7 +927,7 @@
         </aside>
       </section>
       <section data-auto-animate data-auto-animate-id="example-request">
-        <h3 data-id="title">HTTP Request modern version</h3>
+        <h3 data-id="title">HTTP Request, modern version</h3>
         <pre data-id="code"><code class="php font--16" data-trim data-noescape data-line-numbers="7-8,14-20">
           interface ServerRequestInterface {
               public string $protocolVersion { get; }
@@ -958,6 +959,39 @@
           </ul>
         </aside>
       </section>
+      <section data-auto-animate data-auto-animate-id="example-request-tempest">
+        <h3 data-id="title">HTTP Request, Tempest framework</h3>
+        <pre data-id="code"><code class="php font--16" data-trim data-noescape data-line-numbers="">
+          interface Request {
+              public Method $method { get; }
+              public string $uri { get; }
+              public ?string $raw { get; }
+              public array $body { get; }
+              public RequestHeaders $headers { get; }
+              public string $path { get; }
+              public array $query { get; }
+              /** @var \Tempest\Http\Upload[] $files */
+              public array $files { get; }
+              /** @var Cookie[] $cookies */
+              public array $cookies { get; }
+
+              public function has(string $key): bool;
+              public function hasBody(string $key): bool;
+              public function hasQuery(string $key): bool;
+              public function get(string $key, mixed $default = null): mixed;
+              public function getSessionValue(string $name): mixed;
+              public function getCookie(string $name): ?Cookie;
+          }
+        </code></pre>
+        <aside class="notes">
+          <ul>
+            <li>That is what Temptest did!</li>
+            <li>RequestHeaders is list object, ArrayAccess, iterable</li>
+            <li>Also a Header class</li>
+            <li>Not sure if I like Tempest yet, but it does heavily use modern properties</li>
+          </ul>
+        </aside>
+      </section>
       <section>
         <p class="oversize">It used to be anything interesting had to be a method</p>
         <p class="oversize fragment">Now, design your API around concepts,<br>not implementation</p>
@@ -972,7 +1006,7 @@
     <section>
       <section data-auto-animate data-auto-animate-id="example-attributeutils">
         <h3 data-id="title">Definition interfaces</h3>
-        <h4>The common way</h4>
+        <h4>The traditional way</h4>
         <pre data-id="code"><code class="php font--16" data-trim data-noescape data-line-numbers="|18-26">
           interface ParseProperties {
               public function setProperties(array $properties): void;
@@ -981,7 +1015,7 @@
           }
 
           class ClassWithProperties implements ParseProperties {
-              public array $properties = [];
+              public readonly array $properties = [];
 
               public function __construct(
                   public readonly int $a = 0,
@@ -991,13 +1025,11 @@
                   $this->properties = $properties;
               }
 
-              public function includePropertiesByDefault(): bool
-              {
+              public function includePropertiesByDefault(): bool {
                   return true;
               }
 
-              public function propertyAttribute(): string
-              {
+              public function propertyAttribute(): string {
                   return BasicProperty::class;
               }
           }
@@ -1139,6 +1171,12 @@
             <li>Could use private-set or virtual prop to fulfill interface</li>
           </ul>
         </aside>
+      </section>
+    </section>
+    <section>
+      <section>
+        <h2>Pattern Matching! (PHP 8.5, hopefully)</h2>
+
       </section>
     </section>
     <section>
