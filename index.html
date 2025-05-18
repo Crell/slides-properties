@@ -623,6 +623,17 @@
       </section>
     </section>
     <section>
+      <section>
+        <h2>Use case: Filesystem abstraction</h2>
+        <h3>Files</h3>
+        <ul>
+          <li><code>contact.md</code></li>
+          <li><code>contact.php</code></li>
+          <li><code>contact.latte</code></li>
+        </ul>
+        <p>All represented by the logical <code>Page</code> "contact"</p>
+        <p class="fragment">(Real code from a side project, MiDy)</p>
+      </section>
       <section data-auto-animate data-auto-animate-id="example-page">
         <h3 data-id="title">Data object interface</h3>
         <pre data-id="code"><code class="php font--16" data-trim data-noescape data-line-numbers="">
@@ -850,7 +861,7 @@
 
               /** @param array&lt;string, ParsedFile> $parsedFiles */
               public function __construct(
-                  public string $logicalPath,
+                  public LogicalPath $logicalPath,
                   private array $parsedFiles,
               ) {}
 
@@ -862,12 +873,17 @@
         <aside class="notes">
           <ul>
             <li>Write model is all derived off of other values.</li>
-            <li>Not sure if I want this slide or not...</li>
+            <li>Could also be done with methods.</li>>
+            <li>Which is better? Debatable.</li>
           </ul>
         </aside>
       </section>
     </section>
     <section>
+      <section>
+        <h2>Use case: HTTP modeling</h2>
+        <p>Requests have lots of properties/attributes/things about them</p>
+      </section>
       <section data-auto-animate data-auto-animate-id="example-request">
         <h3 data-id="title">HTTP Request / PSR-7 redux</h3>
         <pre data-id="code"><code class="php font--16" data-trim data-noescape data-line-numbers="">
@@ -1004,6 +1020,10 @@
       </section>
     </section>
     <section>
+      <section>
+        <h2>Use case: Definition interfaces</h2>
+        <p>Objects get registered with a service and tell the service about themselves</p>
+      </section>
       <section data-auto-animate data-auto-animate-id="example-attributeutils">
         <h3 data-id="title">Definition interfaces</h3>
         <h4>The traditional way</h4>
@@ -1168,18 +1188,58 @@
         </code></pre>
         <aside class="notes">
           <ul>
-            <li>Could use private-set or virtual prop to fulfill interface</li>
+            <li>Can still just read the properties as normal.</li>
+            <li>Special case of BC shim, in a way.</li>
+          </ul>
+        </aside>
+      </section>
+      <section data-auto-animate data-auto-animate-id="example-attributeutils">
+        <h3 data-id="title">Definition interfaces</h3>
+        <h4>The overdone way?</h4>
+        <pre data-id="code"><code class="php font--16" data-trim data-noescape data-line-numbers="|1,2,5|8-12">
+            interface ParseProperties {
+                public array $properties { set };
+                public bool $includePropertiesByDefault { get; }
+                public string $propertyAttribute { get; }
+            }
+
+          class ClassWithProperties implements ParseProperties {
+              public array $properties {
+                set {
+                  $this->props = array_filter($value, someFilter(...));
+                }
+              }
+
+              public bool $includePropertiesByDefault { get => $this->include; }
+              public bool $propertyAttribute { get => $this->propertiesAs; }
+
+
+              public function __construct(
+                  public readonly int $a = 0,
+                  private readonly $include = true;
+                  private readonly $propertiesAs = BasicProperty::class,
+              ) {}
+          }
+        </code></pre>
+        <aside class="notes">
+          <ul>
+            <li>Not sure if I like this approach either, but it's now on the table</li>
           </ul>
         </aside>
       </section>
     </section>
     <section>
       <section>
-        <h2>Pattern Matching! (PHP 8.5, hopefully)</h2>
-
+        <p class="oversize">Must you model this way? <em class="fragment">No</em></p>
+        <p class="oversize fragment">Should you consider modeling this way? <em class="fragment">Yes</em></p>
+        <p class="fragment">Mentally separate "fields" (stored data) from "properties"</p>
+        <aside class="notes">
+          <ul>
+            <li>This is food for thought, not prescriptive</li>
+            <li>Go forth and experiment</li>
+          </ul>
+        </aside>
       </section>
-    </section>
-    <section>
       <section>
         <h2>Conclusions</h2>
         <ul>
@@ -1188,16 +1248,16 @@
           <li class="fragment">Same effect + less code = happy dev</li>
           <li class="fragment">Data modeling <em>is</em> programming. Programming <em>is</em> data modeling.</li>
         </ul>
-        <div class="fragment">
-          <p class="oversize">We're just getting started...</p>
-          <img src="assets/running-elephpant.gif" alt="An animated PHP elephant, running">
-        </div>
         <aside class="notes">
           <ul>
             <li>"Define the problem such that it becomes solved."</li>
             <li>We now have much stronger tools to define the problem.</li>
           </ul>
         </aside>
+      </section>
+      <section>
+        <p class="oversize">PHP is accelerating...</p>
+        <img src="assets/running-elephpant.gif" alt="An animated PHP elephant, running">
       </section>
     </section>
 
