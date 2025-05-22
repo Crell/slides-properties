@@ -624,6 +624,78 @@
     </section>
     <section>
       <section>
+        <h2>Use case: Message value objects</h2>
+        <p>Real code I wrote at work last week</p>
+      </section>
+      <section data-auto-animate data-auto-animate-id="example-messages">
+        <h3 data-id="title">Define a simple value object</h3>
+        <pre data-id="code"><code class="php font--16" data-trim data-noescape data-line-numbers="">
+          interface ResponseMessage {
+              public ResultStatus $status { get; }
+              public string $message { get; }
+              public mixed $result { get; }
+          }
+
+          interface ErrorMessage extends ResponseMessage {
+              public int $statusCode { get; }
+          }
+
+          enum ResultStatus: string {
+            case OK = 'OK';
+            case Error = 'Error';
+          }
+        </code></pre>
+        <aside class="notes">
+          <ul>
+            <li>Message wrapper from controller actions</li>
+            <li>Request handler system converts to PSR-7 response</li>
+          </ul>
+        </aside>
+      </section>
+      <section data-auto-animate data-auto-animate-id="example-messages">
+        <h3 data-id="title">Create simple value objects</h3>
+        <pre data-id="code"><code class="php font--14" data-trim data-noescape data-line-numbers="">
+          class OKMessage implements ResponseMessage {
+            // Predefined, immutable
+            private(set) ResultStatus $status = ResultStatus::OK;
+
+            public function __construct(
+              public readonly string $message = '',
+              public readonly mixed $result = null,
+            ) {}
+          }
+
+          class NotFoundMessage implements ResponseError {
+            public ResultStatus $status = ResultStatus::Error;
+            private(set) int $code = 404;
+
+            public function __construct(
+              public readonly string $message = '',
+              public readonly mixed $result = null,
+            ) {}
+          }
+
+          class GenericErrorMessage implements ResponseError {
+            public ResultStatus $status = ResultStatus::Error;
+
+            public function __construct(
+              public readonly string $message = '',
+              public readonly mixed $result = null,
+              public readonly int $code = 400,
+            ) {}
+          }
+        </code></pre>
+        <aside class="notes">
+          <ul>
+            <li>Readonly properties cannot have default values, private(set) can</li>
+            <li>Stupidly simple</li>
+            <li>Could be done with methods?  Only if you love carpal tunnel...</li>
+          </ul>
+        </aside>
+      </section>
+    </section>
+    <section>
+      <section>
         <h2>Use case: Filesystem abstraction</h2>
         <h3>Files</h3>
         <ul>
@@ -777,12 +849,11 @@
       <section data-auto-animate data-auto-animate-id="example-page">
         <h3 data-id="title">Postel's law</h3>
         <p><q>Be conservative in what you send,<br />be liberal in what you accept.</q></p>
-        <pre data-id="code"><code class="php font--16" data-trim data-noescape data-line-numbers="|9,13|2-6">
+        <pre data-id="code"><code class="php font--16" data-trim data-noescape data-line-numbers="|8,12|2-5">
           class PageRecord implements Page {
               private(set) LogicalPath $logicalPath {
-                  set(LogicalPath|string $value) => is_string($value)
-                                                    ? LogicalPath::create($value)
-                                                    : $value;
+                  set(LogicalPath|string $value)
+                      => is_string($value) ? LogicalPath::create($value) : $value;
               }
 
               public function __construct(
@@ -807,9 +878,8 @@
         <pre data-id="code"><code class="php font--16" data-trim data-noescape data-line-numbers="">
           class PageRecord implements Page {
               private(set) LogicalPath $logicalPath {
-                  set(LogicalPath|string $value) => is_string($value)
-                                                    ? LogicalPath::create($value)
-                                                    : $value;
+                  set(LogicalPath|string $value)
+                      => is_string($value) ? LogicalPath::create($value) : $value;
               }
 
               public function __construct(
@@ -834,6 +904,29 @@
             <li>Any upcasting of value objects happens inside PageRecord, where it belongs!</li>
             <li>LogicalPath is Stringable, so can use in the query params.</li>
             <li>This is all the read model.  What is the write model?</li>
+          </ul>
+        </aside>
+      </section>
+      <section data-auto-animate data-auto-animate-id="example-page">
+        <h3 data-id="title">Bonus: Enum hydration</h3>
+        <pre data-id="code"><code class="php font--16" data-trim data-noescape data-line-numbers>
+          enum SortOrder {
+              case Asc = 'asc';
+              case Desc = 'desc';
+          }
+
+          class SomeClass {
+              public SortOrder $order {
+                  set(SortOrder|string $value)
+                      => is_string($value) ? SortOrder::from($value) : $value;
+              }
+          }
+        </code></pre>
+        <p>Courtesy Dana Luthor on Tuesday</p>
+        <aside class="notes">
+          <ul>
+            <li>Only store the enum, but set via enum or string.</li>
+            <li>Could add method to SortOrder to handle any case.</li>
           </ul>
         </aside>
       </section>
@@ -873,7 +966,7 @@
         <aside class="notes">
           <ul>
             <li>Write model is all derived off of other values.</li>
-            <li>Could also be done with methods.</li>>
+            <li>Could also be done with methods.</li>
             <li>Which is better? Debatable.</li>
           </ul>
         </aside>
@@ -1027,13 +1120,14 @@
       <section data-auto-animate data-auto-animate-id="example-attributeutils">
         <h3 data-id="title">Definition interfaces</h3>
         <h4>The traditional way</h4>
-        <pre data-id="code"><code class="php font--16" data-trim data-noescape data-line-numbers="|18-26">
+        <pre data-id="code"><code class="php font--16" data-trim data-noescape data-line-numbers="|19-27">
           interface ParseProperties {
               public function setProperties(array $properties): void;
               public function includePropertiesByDefault(): bool;
               public function propertyAttribute(): string;
           }
 
+          #[\Attribute]
           class ClassWithProperties implements ParseProperties {
               public readonly array $properties = [];
 
@@ -1065,11 +1159,12 @@
       <section data-auto-animate data-auto-animate-id="example-attributeutils">
         <h3 data-id="title">Definition interfaces</h3>
         <h4>The Laravel way</h4>
-        <pre data-id="code"><code class="php font--16" data-trim data-noescape data-line-numbers="|8-10">
+        <pre data-id="code"><code class="php font--16" data-trim data-noescape data-line-numbers="|9-11">
           interface ParseProperties {
               public function setProperties(array $properties): void;
           }
 
+          #[\Attribute]
           class ClassWithProperties implements ParseProperties {
               public array $properties = [];
 
@@ -1105,6 +1200,7 @@
               includeByDefault: true,
               propertyAttribute: BasicProperty::class,
           )]
+          #[\Attribute]
           class ClassWithProperties implements ParseProperties {
               public array $properties = [];
 
@@ -1128,7 +1224,7 @@
       <section data-auto-animate data-auto-animate-id="example-attributeutils">
         <h3 data-id="title">Definition interfaces</h3>
         <h4>The PHP 8.4 way</h4>
-        <pre data-id="code"><code class="php font--16" data-trim data-noescape data-line-numbers="|4-5,11-12">
+        <pre data-id="code"><code class="php font--16" data-trim data-noescape data-line-numbers="|4-5,12-13">
             interface ParseProperties {
                 public function setProperties(array $properties): void;
 
@@ -1136,6 +1232,7 @@
                 public string $propertyAttribute { get; }
             }
 
+          #[\Attribute]
           class ClassWithProperties implements ParseProperties {
               public array $properties = [];
 
@@ -1161,7 +1258,7 @@
       <section data-auto-animate data-auto-animate-id="example-attributeutils">
         <h3 data-id="title">Definition interfaces</h3>
         <h4>The dynamic way</h4>
-        <pre data-id="code"><code class="php font--16" data-trim data-noescape data-line-numbers="4-5,11-12,14, 16-18">
+        <pre data-id="code"><code class="php font--16" data-trim data-noescape data-line-numbers="4-5,12-13,15, 17-19">
             interface ParseProperties {
                 public function setProperties(array $properties): void;
 
@@ -1169,6 +1266,7 @@
                 public string $propertyAttribute { get; }
             }
 
+          #[\Attribute]
           class ClassWithProperties implements ParseProperties {
               public array $properties = [];
 
@@ -1196,13 +1294,14 @@
       <section data-auto-animate data-auto-animate-id="example-attributeutils">
         <h3 data-id="title">Definition interfaces</h3>
         <h4>The overdone way?</h4>
-        <pre data-id="code"><code class="php font--16" data-trim data-noescape data-line-numbers="|1,2,5|8-12">
+        <pre data-id="code"><code class="php font--16" data-trim data-noescape data-line-numbers="|1,2,5|9-13">
             interface ParseProperties {
                 public array $properties { set };
                 public bool $includePropertiesByDefault { get; }
                 public string $propertyAttribute { get; }
             }
 
+          #[\Attribute]
           class ClassWithProperties implements ParseProperties {
               public array $properties {
                 set {
@@ -1223,6 +1322,7 @@
         </code></pre>
         <aside class="notes">
           <ul>
+            <li>A set-only property???  It's legal!</li>
             <li>Not sure if I like this approach either, but it's now on the table</li>
           </ul>
         </aside>
